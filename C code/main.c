@@ -14,22 +14,41 @@ int main(int argc, char** argv){
         // read the processing file 
         char ori_filename[] = "../audio/ori_audio.wav";
         short *ori_waveform;
-        ori_waveform = read_wavfile(ori_filename); // retrun only the wave form of the audio
+        int ori_size = 0;
+        ori_waveform = read_wavfile(ori_filename, &ori_size); // retrun only the wave form of the audio
 
-        char echo_filename[] = "../audirao/echo_audio.wav";
+        char echo_filename[] = "../audio/echo_audio.wav";
         short *echo_waveform;
-        echo_waveform = read_wavfile(echo_filename);
+        int echo_size = 0;
+        echo_waveform = read_wavfile(echo_filename, &echo_size);
+
+        //test zeropadding and stackup and flatten
+        struct header *ori_header;
+        ori_header = get_header(ori_filename);
+        float sampleRate = (float)ori_header->sr;
+        float time = 0.5;
+        int sample_per_frame = (int)(time * sampleRate);
+        printf("samples per frame:%d \n", sample_per_frame);
+
+        struct header *echo_header;
+        echo_header = get_header(echo_filename);
 
 
+        ori_waveform = zero_padding(ori_waveform, ori_size, sample_per_frame, &ori_size);
+        printf("original audio new size:%d\n", ori_size);
+
+ 
+        echo_waveform = zero_padding(echo_waveform, echo_size, sample_per_frame, &echo_size);
+        printf("echo audio new size: %d\n", echo_size);
 
 
         //get header data create another header for output file
-        // struct header *new_header;
-        // new_header = get_header(ori_filename);
-        // char newfilename[] = "test.wav";
-        // write_wavfile(new_header, echo_waveform, newfilename);
+        
+        char newfilename[] = "test.wav";
+        write_wavfile(echo_header, echo_waveform, newfilename);
 
-
+        free(ori_header);
+        free(echo_header);
         free(ori_waveform);
         free(echo_waveform);
 

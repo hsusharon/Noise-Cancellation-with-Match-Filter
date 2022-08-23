@@ -36,7 +36,7 @@ void read_header(FILE *fptr, struct header *headerData){
 }
 
 // read audio file data
-short* read_wavfile(char *filename){
+short* read_wavfile(char *filename, int *audio_len){
     FILE *fptr = fopen(filename, "rb");
     if (fptr == NULL){  // make sure the file is opened correctly
         printf("Unable to open file %s \n", filename);
@@ -54,10 +54,11 @@ short* read_wavfile(char *filename){
     int idx = 0;
     short temp;
     while(fread(&temp, 1, sizeof(short), fptr)){
-        audio_data[idx] = temp;
+        audio_data[idx ] = temp;
         idx++;
     }
-    printf("Finish reading file: %s\n\n", filename);
+    *audio_len = idx;
+    printf("Finish reading file: %s with length %d\n\n", filename, *audio_len);
     return audio_data;
 }
 
@@ -108,9 +109,17 @@ void write_wavfile(struct header *headerData, short *arr, char *filename){
     fclose(fptr);
 }
 
+// allocate a 1D dynamic array
+short* create_1D_arr(int col){
+    short* arr = (short*)malloc(col  * sizeof(short));
+    if(arr == NULL){
+        printf("Out of memory\n");
+        exit(0);
+    }
+}
 
 // allocate a 2D dynamic array
-short** create_2D_arr(int col, int row){
+short** create_2D_arr(int row, int col){
     short **arr = (short**)malloc(row * sizeof(short*));
     if(arr == NULL){
         printf("Out of memory\n");
@@ -126,14 +135,50 @@ short** create_2D_arr(int col, int row){
     }
     return arr;
 }
-// zero padding
 
+// zero padding
+short* zero_padding(short *arr, int arrsize, int target, int *new_size){
+    int remain = arrsize%target;
+    remain = target - remain;
+    *new_size = remain + arrsize;
+    // printf("add additional %d samples\n", remain);
+    short *new_arr = create_1D_arr(remain+arrsize);
+    for(int i=0;i<arrsize;i++){
+        new_arr[i] = arr[i]; 
+    }
+    for(int i=0;i<remain;i++){
+        new_arr[i + arrsize] = 0;  // pad the remain values with zeros
+    }
+    return new_arr;
+}
 
 // stack audiofile up
+short** stack_up_arr(short* arr, int samples, int sample_per_frame){
+    int frames = (int)(samples / sample_per_frame);
+    short** stack_arr = create_2D_arr(frames, sample_per_frame);
+    int sample_counter = 0;
+    for(int i=0;i<samples;i++){
+        int frame_num = i / sample_per_frame;
+        stack_arr[frame_num][sample_counter] = arr[i];
+        sample_counter++;
+        if(sample_counter == sample_per_frame){
+            sample_counter = 0;
+        } 
+    }
+    return stack_arr;
+}
 
 
 // flatten the audio
-
+short* flatten_audio(short** arr, int sample_per_frame, int frames){
+    short* new_arr = create_1D_arr(sample_per_frame * frames);
+    for(int i=0;i<frames;i++){
+        for(int j=0;j<sample_per_frame;j++){
+            new_arr[i*sample_per_frame + j] = arr[i][j]; 
+        }
+    }
+    return new_arr;
+}
 
 
 
