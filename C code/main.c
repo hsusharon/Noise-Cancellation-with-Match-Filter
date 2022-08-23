@@ -28,7 +28,6 @@ int main(int argc, char** argv){
         float sampleRate = (float)ori_header->sr;
         float time = 0.5;
         int sample_per_frame = (int)(time * sampleRate);
-        printf("samples per frame:%d \n", sample_per_frame);
 
         struct header *echo_header;
         echo_header = get_header(echo_filename);
@@ -36,16 +35,21 @@ int main(int argc, char** argv){
 
         ori_waveform = zero_padding(ori_waveform, ori_size, sample_per_frame, &ori_size);
         printf("original audio new size:%d\n", ori_size);
-
- 
         echo_waveform = zero_padding(echo_waveform, echo_size, sample_per_frame, &echo_size);
         printf("echo audio new size: %d\n", echo_size);
 
+        int frames = (int)(ori_size / sample_per_frame);
+        printf("Number of frames:%d  Samples per frame:%d\n", frames, sample_per_frame);
+        short** stack_ori_waveform;
+        stack_ori_waveform = stack_up_arr(ori_waveform, frames, sample_per_frame);
+        short* flat_ori_waveform;
+        flat_ori_waveform = flatten_audio(stack_ori_waveform, sample_per_frame, frames);
 
+        printf("Finish processing\n");
         //get header data create another header for output file
         
-        char newfilename[] = "test.wav";
-        write_wavfile(echo_header, echo_waveform, newfilename);
+        // char newfilename[] = "test.wav";
+        // write_wavfile(echo_header, echo_waveform, newfilename);
 
         free(ori_header);
         free(echo_header);

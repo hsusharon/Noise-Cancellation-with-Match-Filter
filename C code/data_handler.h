@@ -125,8 +125,8 @@ short** create_2D_arr(int row, int col){
         printf("Out of memory\n");
         exit(0);
     }
-
-    for(int i=0;i<col;i++){
+    
+    for(int i=0;i<row;i++){
         arr[i] = (short*)malloc(col * sizeof(short));
         if(arr[i] == NULL){
             printf("Out of memory\n");
@@ -153,18 +153,23 @@ short* zero_padding(short *arr, int arrsize, int target, int *new_size){
 }
 
 // stack audiofile up
-short** stack_up_arr(short* arr, int samples, int sample_per_frame){
-    int frames = (int)(samples / sample_per_frame);
+short** stack_up_arr(short* arr, int frames, int sample_per_frame){
+    
     short** stack_arr = create_2D_arr(frames, sample_per_frame);
+    int samples = frames * sample_per_frame;
     int sample_counter = 0;
+    int frame_num = 0;
     for(int i=0;i<samples;i++){
-        int frame_num = i / sample_per_frame;
         stack_arr[frame_num][sample_counter] = arr[i];
         sample_counter++;
         if(sample_counter == sample_per_frame){
             sample_counter = 0;
+            // printf("%d  ", frame_num);
+            frame_num ++ ;
         } 
+        
     }
+    //printf("%d %d \n", frame_num, sample_counter);
     return stack_arr;
 }
 
