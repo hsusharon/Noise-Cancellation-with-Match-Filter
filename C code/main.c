@@ -9,6 +9,7 @@ int main(int argc, char** argv){
     int mode;
     // mode 1: process the original audio file, mode 2: capture data from computer microphone
     mode = 1; 
+    printf("\n-------------------- Running program ----------------------\n\n");
     
     if(mode == 1){
         // read the processing file 
@@ -22,16 +23,18 @@ int main(int argc, char** argv){
         int echo_size = 0;
         echo_waveform = read_wavfile(echo_filename, &echo_size);
 
-        //test zeropadding and stackup and flatten
+        //get the information(header) of the audio files
         struct header *ori_header;
         ori_header = get_header(ori_filename);
-        float sampleRate = (float)ori_header->sr;
-        float time = 0.5;
-        int sample_per_frame = (int)(time * sampleRate);
-
         struct header *echo_header;
         echo_header = get_header(echo_filename);
 
+        //get sample rate and sample per frame values
+        float sampleRate = (float)ori_header->sr;
+        float time = 0.5;  // in seconds
+        int sample_per_frame = (int)(time * sampleRate);
+
+        printf("\n----------------- File loaded successfully ------------------------\n\n");
 
         ori_waveform = zero_padding(ori_waveform, ori_size, sample_per_frame, &ori_size);
         printf("original audio new size:%d\n", ori_size);
@@ -40,19 +43,32 @@ int main(int argc, char** argv){
 
         int frames = (int)(ori_size / sample_per_frame);
         printf("Number of frames:%d  Samples per frame:%d\n", frames, sample_per_frame);
-        short** stack_ori_waveform;
-        stack_ori_waveform = stack_up_arr(ori_waveform, frames, sample_per_frame);
-        short* flat_ori_waveform;
-        flat_ori_waveform = flatten_audio(stack_ori_waveform, sample_per_frame, frames);
+        int *parameters = (int*)malloc(2*sizeof(int));
+        parameters[0] = frames;
+        parameters[1] = sample_per_frame;
 
-        printf("Finish processing\n");
+        // // stack the audio into smaller frames
+        short** stack_ori_waveform = stack_up_arr(ori_waveform, frames, sample_per_frame);
+        short** stack_echo_waveform = stack_up_arr(echo_waveform, frames, sample_per_frame);
+
+        //find the match filter of the two audio
+        roomTransferFunction_mode1(stack_ori_waveform, stack_echo_waveform, parameters);
+
+
+        // // flatten the processed audio
+        // short* flat_ori_waveform = flatten_audio(stack_ori_waveform, sample_per_frame, frames);
+        // short *flat_echo_waveform = flatten_audio(stack_echo_waveform, sample_per_frame, frames);
+
+        // printf("Finish processing\n");
         //get header data create another header for output file
         
         // char newfilename[] = "test.wav";
-        // write_wavfile(echo_header, echo_waveform, newfilename);
+        // write_wavfile(echo_header, flat_echo_waveform, newfilename);
 
         free(ori_header);
         free(echo_header);
+        free(stack_ori_waveform);
+        free(stack_echo_waveform);
         free(ori_waveform);
         free(echo_waveform);
 

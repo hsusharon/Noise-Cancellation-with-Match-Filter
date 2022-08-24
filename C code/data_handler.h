@@ -18,6 +18,8 @@ struct header{  // header file of a wav file
     int subChunk2Size;
 }header;
 
+
+
 //read value to specific memory
 void read_header(FILE *fptr, struct header *headerData){
     fread(headerData->RIFF, sizeof(headerData->RIFF), sizeof(char), fptr);
