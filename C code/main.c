@@ -31,7 +31,7 @@ int main(int argc, char** argv){
 
         //get sample rate and sample per frame values
         float sampleRate = (float)ori_header->sr;
-        float time = 0.5;  // in seconds
+        float time = 0.25;  // in seconds
         int sample_per_frame = (int)(time * sampleRate);
 
         printf("\n----------------- File loaded successfully ------------------------\n\n");
@@ -53,18 +53,21 @@ int main(int argc, char** argv){
 
         //find the match filter of the two audio
         roomTransferFunction_mode1(stack_ori_waveform, stack_echo_waveform, parameters);
-
-
+        
         // // flatten the processed audio
         // short* flat_ori_waveform = flatten_audio(stack_ori_waveform, sample_per_frame, frames);
         // short *flat_echo_waveform = flatten_audio(stack_echo_waveform, sample_per_frame, frames);
 
-        // printf("Finish processing\n");
-        //get header data create another header for output file
+        // get header data create another header for output file
+        // printf("\nComputing DFT ...\n");
+        // struct complex_val *dft_value = DFT(ori_waveform, ori_size);
+        // printf("\nComputing iDFT ...\n");
+        // struct complex_val *test = iDFT(dft_value, ori_size);
+        // short *new_arr = magnitude(test, ori_size);
         
         // char newfilename[] = "test.wav";
-        // write_wavfile(echo_header, flat_echo_waveform, newfilename);
-
+        // write_wavfile(echo_header, new_arr, newfilename);
+        printf("\n--------------Free all the dynamic array---------------\n");
         free(ori_header);
         free(echo_header);
         free(stack_ori_waveform);
