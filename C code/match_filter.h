@@ -129,8 +129,9 @@ struct complex_val* iDFT(struct complex_val *arr, int N, struct complex_val** DF
 short* magnitude(struct complex_val *arr, int N){
     short *new_arr = (short*)malloc(N*sizeof(short));
     for(int i=0;i<N;i++){
-        float temp = (arr[i].real * arr[i].real) + (arr[i].img * arr[i].img);
-        new_arr[i] = (short)sqrt(temp);
+        //float temp = (arr[i].real * arr[i].real) + (arr[i].img * arr[i].img);   
+        float temp = arr[i].real;  // we only take the real part of the audio
+        new_arr[i] = (short)temp;
     }
     return new_arr;
 }
