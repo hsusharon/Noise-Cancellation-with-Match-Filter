@@ -51,8 +51,9 @@ int main(int argc, char** argv){
         short** stack_ori_waveform = stack_up_arr(ori_waveform, frames, sample_per_frame);
         short** stack_echo_waveform = stack_up_arr(echo_waveform, frames, sample_per_frame);
 
-        //find the match filter of the two audio
-        roomTransferFunction_mode1(stack_ori_waveform, stack_echo_waveform, parameters);
+        //find the transfer function of the room
+        struct complex_val **roomTransferFunction;
+        roomTransferFunction = roomTransferFunction_mode1(stack_ori_waveform, stack_echo_waveform, parameters);
         
         // // flatten the processed audio
         // short* flat_ori_waveform = flatten_audio(stack_ori_waveform, sample_per_frame, frames);

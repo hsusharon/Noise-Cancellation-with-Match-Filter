@@ -16,6 +16,22 @@ struct complex_val* create_complex_1d_arr(int col){
     return arr;
 }
 
+struct complex_val** create_complex_2d_arr(int row, int col){
+    struct complex_val **arr = (struct complex_val**)malloc(row * sizeof(struct complex_val*));
+    if(arr == NULL){
+        printf("Out of memory\n");
+        exit(0);
+    }
+    for(int i=0;i<row;i++){
+        arr[i] = (struct complex_val*)malloc(col * sizeof(struct complex_val));
+        if(arr[i] == NULL){
+            printf("Out of memory\n");
+            exit(0);
+        }
+    }
+    return arr;
+}
+
 // complex value multiplication operation
 struct complex_val complex_multi(struct complex_val value1, struct complex_val value2){
     struct complex_val temp;
@@ -119,7 +135,7 @@ struct complex_val* roomFilter(struct complex_val *dft_ori, struct complex_val *
 }
 
 //find the match filter function
-void matchFilter(struct complex_val *room_arr, int N){
+struct complex_val* matchFilter(struct complex_val *room_arr, int N){
     // H'(f) = 1/H(f)
     struct complex_val temp;
     temp.real = 1; temp.img = 0;
@@ -127,20 +143,19 @@ void matchFilter(struct complex_val *room_arr, int N){
     for(int i=0;i<N;i++){
         matchFilterTF[i] = complex_division(temp, room_arr[i]);
     }
- 
+    return matchFilterTF;
 }
 
-
 //find the room transfer function
-void roomTransferFunction_mode1(short **ori_audio, short **echo_audio, int *parameters){
+struct complex_val** roomTransferFunction_mode1(short **ori_audio, short **echo_audio, int *parameters){
     printf("\n------------Calculating Room Transfer Function -----------\n\n");
     int frames = parameters[0];
     int samples_per_frame = parameters[1];
     printf("Processing %d frames and %d samples per frame\n", frames, samples_per_frame);
     struct complex_val **DFT_table = create_table_DFT(samples_per_frame);  // create a DFT table to optimize the run time
-
+    struct complex_val **roomTransferFunction = create_complex_2d_arr(frames, samples_per_frame);
     for(int i=0;i<frames;i++){
-        printf(" -> Processing frame: %d / %d", i, frames);
+        printf(" -> Processing frame: %d / %d\n", i+1, frames);
         short *temp_ori = (short*)malloc(samples_per_frame * sizeof(short));  // store frame data into temp array
         short *temp_echo = (short*)malloc(samples_per_frame * sizeof(short)); 
         for(int j = 0;j<samples_per_frame;j++){ 
@@ -148,28 +163,49 @@ void roomTransferFunction_mode1(short **ori_audio, short **echo_audio, int *para
             temp_echo[j] = echo_audio[i][j];
         }
         // find the dft of both audio 
-        printf("\n      Computing DFT ...");
+        printf("      Computing DFT -> ");
         struct complex_val *dft_ori = DFT(temp_ori, samples_per_frame, DFT_table, i);
         struct complex_val *dft_echo = DFT(temp_echo, samples_per_frame, DFT_table, i);
 
         //find the transfer function of the room
-        // printf("\nCalculating the transfer function .... \n");
-        // struct complex_val *roomTransferFunction;
-        // roomTransferFunction = roomFilter(dft_ori, dft_echo, samples_per_frame);
+        printf(" Computing transfer function -> ");
+        struct complex_val *roomTransferFunction_frame;
+        roomTransferFunction_frame = roomFilter(dft_ori, dft_echo, samples_per_frame);
 
-        printf("   Finish\n");
+        for(int j=0;j<samples_per_frame;j++){
+            roomTransferFunction[i][j] = roomTransferFunction_frame[j];
+        }
+
+        printf("Finish\n");
         free(temp_ori);
         free(temp_echo);
         //return roomTransferFunction;
     }
     free(DFT_table);
+    return roomTransferFunction;
+}
 
+//find the match filter function
+struct complex_val** find_match_filter(struct complex_val** roomFunction, int *parameters){
+    int frames = parameters[0];
+    int samples_per_frame = parameters[1];
+    struct complex_val **matchFilterValue = create_complex_2d_arr(frames, samples_per_frame);
+    for(int i=0;i<frames;i++){
+        struct complex_val *temp = create_complex_1d_arr(samples_per_frame);
+        for(int j=0;j<samples_per_frame;j++){
+            temp[j] = roomFunction[i][j];
+        }
+        temp = matchFilter(temp, samples_per_frame);
+        for(int j=0;j<samples_per_frame;j++){
+            matchFilterValue[i][j] = temp[j];
+        }
+    }
+    return matchFilterValue;
 }
 
 
-//new output audio
-
-void new_output_audio(){
+//new_output_audio()
+void new_output_audio(short **stacked_ori_audio){
 
 
 }
