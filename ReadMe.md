@@ -73,7 +73,7 @@ feedback_audio, sr = librosa.load(file_location)
 ```
 Define **zeropadding function**, **framing_audio function** and **flatten_audio**, we need to window the data into small dataframes because the transfer function might not always be the same.
 ``` python 3.7.0
-## make sure we can frame the inserted audio prefectly
+## make sure we can frame the inserted audio perfectly
 def zeropadding(audio, samples_per_frame):
     remain = audio.shape[0] % samples_per_frame
     remain = int(remain)
@@ -185,9 +185,14 @@ observe_data = abs(flatten_audio(observe_data, frames))
 ## IPython.display.Audio(data=observe_data, rate=sr)
 
 ```
-If we listen to the audio file we generate, it is obvious that the echo was prefectly canceled. However, there is also a severe distortion in the audio since we discarded the phase. There is definintely methods that we could overcome this problem. But we also proved that this method could somehow work.
+If we listen to the audio file we generate, it is obvious that the echo was prefectly canceled. However, there is also a severe distortion in the audio since we discarded the phase. There is definintely methods that we could overcome this problem. But we also proved that this method could work in some scenarioes. (The steps and output is also uploaded on this repository)
 
 ## Results
+First we experimented this method in python(code above) to make sure that it could work. From the output of the echo processed audio, there is definitely some noise that is noticable which result in discarding the phase after processing. However, with a more linear or easy predictable noise, it works perfectly, which is the rain audio. We can perfectly cancel the noise and generate the observed audio by passing it through the match filter and the room filter. The observed audio sounds very clear, and does not contain any sound of the rain. This proves that this is a very powerful method for linear noise cancelation. 
+By coding this in C there are couple of techniques that we could do to speed up the processing time. By creating a DFT table could help up save a lot of time to calculte sine and cosine values in every frame iteration. However, there is still some method to speed up the processing time that could be another project in the future. 
 
+:::info
+See ReadMe file in the C code folder to run the program
+:::
+ 
 
-## Reference
