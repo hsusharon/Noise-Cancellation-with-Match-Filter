@@ -52,29 +52,54 @@ int main(int argc, char** argv){
         short** stack_echo_waveform = stack_up_arr(echo_waveform, frames, sample_per_frame);
 
         //find the transfer function of the room
-        struct complex_val **roomTransferFunction;
+        struct complex_val **roomTransferFunction; // a complex number matrix with size frames*sample_per_frame
         roomTransferFunction = roomTransferFunction_mode1(stack_ori_waveform, stack_echo_waveform, parameters);
-        
-        // // flatten the processed audio
-        // short* flat_ori_waveform = flatten_audio(stack_ori_waveform, sample_per_frame, frames);
-        // short *flat_echo_waveform = flatten_audio(stack_echo_waveform, sample_per_frame, frames);
 
-        // get header data create another header for output file
-        // printf("\nComputing DFT ...\n");
-        // struct complex_val *dft_value = DFT(ori_waveform, ori_size);
-        // printf("\nComputing iDFT ...\n");
-        // struct complex_val *test = iDFT(dft_value, ori_size);
-        // short *new_arr = magnitude(test, ori_size);
+        //find the match filter
+        struct complex_val **matchTransferFunction; // a complex numnber matrix with size frames*sample_per_frame
+        matchTransferFunction = find_match_filter(roomTransferFunction, parameters);
+
+
+        //get the DFT table
+        struct complex_val **DFT_table = create_table_DFT(sample_per_frame);
+        // generate the new output waveform
+        short **newoutput_stacked_audio;
+        newoutput_stacked_audio = filter_convolve(stack_ori_waveform, matchTransferFunction, DFT_table, parameters);
+        // generate the new observed waveform
+        short **newobserved_stacked_audio;
+        newobserved_stacked_audio = filter_convolve(newoutput_stacked_audio, roomTransferFunction, DFT_table, parameters);
         
-        // char newfilename[] = "test.wav";
-        // write_wavfile(echo_header, new_arr, newfilename);
-        printf("\n--------------Free all the dynamic array---------------\n");
+        printf("------------------------- Write new audio ------------------------------\n\n");
+        // flatten the processed audio
+        short* newoutput_waveform = flatten_audio(newoutput_stacked_audio, sample_per_frame, frames);
+        short *newobserve_waveform = flatten_audio(newobserved_stacked_audio, sample_per_frame, frames);
+
+        // create data
+        char newfilename_output[] = "Process_output/new_output.wav";
+        write_wavfile(echo_header, newoutput_waveform, newfilename_output);
+        printf(" -> Finish writing %s\n", newfilename_output);
+
+        char newfilename_observe[] = "Process_output/new_observe.wav";
+        write_wavfile(echo_header, newobserve_waveform, newfilename_observe);
+        printf(" -> Finish writing %s \n", newfilename_observe);
+
+
+        printf("\n -------------- Free all the dynamic array---------------\n\n");
         free(ori_header);
         free(echo_header);
         free(stack_ori_waveform);
         free(stack_echo_waveform);
         free(ori_waveform);
         free(echo_waveform);
+        free(DFT_table);
+
+        free(roomTransferFunction);
+        free(matchTransferFunction);
+        free(newoutput_stacked_audio);
+        free(newobserved_stacked_audio);
+        free(newoutput_waveform);
+        free(newobserve_waveform);
+        printf(" -------------------- Process Done ------------------------\n\n");
 
     }else{
         // get data from computer microphone

@@ -13,6 +13,11 @@ struct complex_val* create_complex_1d_arr(int col){
         printf("Out of memory\n");
         exit(0);
     }
+    //initialize the array
+    for(int i=0;i<col;i++){
+        arr[i].real = 0;
+        arr[i].img = 0;
+    }
     return arr;
 }
 
@@ -27,6 +32,13 @@ struct complex_val** create_complex_2d_arr(int row, int col){
         if(arr[i] == NULL){
             printf("Out of memory\n");
             exit(0);
+        }
+    }
+    // initialize the array
+    for(int i=0;i<row;i++){
+        for(int j=0;j<col;j++){
+            arr[i][j].real = 0;
+            arr[i][j].img = 0;
         }
     }
     return arr;
@@ -86,7 +98,7 @@ struct complex_val** create_table_DFT(int N){
 }
 
 //FFT
-struct complex_val* DFT(short *arr, int N, struct complex_val** DFT_table, int breakpoint){
+struct complex_val* DFT(short *arr, int N, struct complex_val** DFT_table){
     //DFT
     struct complex_val *dft_value = create_complex_1d_arr(N);
     for(int i=0;i<N;i++){
@@ -94,9 +106,6 @@ struct complex_val* DFT(short *arr, int N, struct complex_val** DFT_table, int b
             dft_value[i].real += (float)(arr[j]) * DFT_table[i][j].real;
             dft_value[i].img += -1.0 * (float)(arr[j]) * DFT_table[i][j].img;
         }
-        //printf("%f %f\n", dft_value[i].real, dft_value[i].img);
-        
-        
     }
     return dft_value;
 }
@@ -113,6 +122,7 @@ struct complex_val* iDFT(struct complex_val *arr, int N, struct complex_val** DF
         }
         //printf("%f  %f\n", idft_value[i].real, idft_value[i].img);
     }
+    return idft_value;
 }
 
 // compute the magnitude of a complex value
@@ -148,7 +158,7 @@ struct complex_val* matchFilter(struct complex_val *room_arr, int N){
 
 //find the room transfer function
 struct complex_val** roomTransferFunction_mode1(short **ori_audio, short **echo_audio, int *parameters){
-    printf("\n------------Calculating Room Transfer Function -----------\n\n");
+    printf("\n------------------ Calculating Transfer Function -------------------\n\n");
     int frames = parameters[0];
     int samples_per_frame = parameters[1];
     printf("Processing %d frames and %d samples per frame\n", frames, samples_per_frame);
@@ -164,8 +174,8 @@ struct complex_val** roomTransferFunction_mode1(short **ori_audio, short **echo_
         }
         // find the dft of both audio 
         printf("      Computing DFT -> ");
-        struct complex_val *dft_ori = DFT(temp_ori, samples_per_frame, DFT_table, i);
-        struct complex_val *dft_echo = DFT(temp_echo, samples_per_frame, DFT_table, i);
+        struct complex_val *dft_ori = DFT(temp_ori, samples_per_frame, DFT_table);
+        struct complex_val *dft_echo = DFT(temp_echo, samples_per_frame, DFT_table);
 
         //find the transfer function of the room
         printf(" Computing transfer function -> ");
@@ -191,6 +201,7 @@ struct complex_val** find_match_filter(struct complex_val** roomFunction, int *p
     int samples_per_frame = parameters[1];
     struct complex_val **matchFilterValue = create_complex_2d_arr(frames, samples_per_frame);
     for(int i=0;i<frames;i++){
+        //printf(" -> Processing match filter: %d / %d .... ", i+1, frames);
         struct complex_val *temp = create_complex_1d_arr(samples_per_frame);
         for(int j=0;j<samples_per_frame;j++){
             temp[j] = roomFunction[i][j];
@@ -199,21 +210,52 @@ struct complex_val** find_match_filter(struct complex_val** roomFunction, int *p
         for(int j=0;j<samples_per_frame;j++){
             matchFilterValue[i][j] = temp[j];
         }
+        //printf(" Finish\n");
     }
+    printf("Finish calculating the match filter value\n");
     return matchFilterValue;
 }
 
 
-//new_output_audio()
-void new_output_audio(short **stacked_ori_audio){
+//new_output_audio
+short** filter_convolve(short **stacked_ori_audio, struct complex_val **matchFunction, struct complex_val **DFT_table, int *parameters){
+    int frames = parameters[0];
+    int samples_per_frame = parameters[1];
+    short **new_waveform = create_2D_arr(frames, samples_per_frame);
+    
+    for(int i=0;i<frames;i++){
+        printf("-> Calculating the new waveform %d / %d ... ", i+1, frames);
+        short *temp = (short*)malloc(samples_per_frame * sizeof(short));
+        for(int j=0;j<samples_per_frame;j++){
+            temp[j] = stacked_ori_audio[i][j];
+        }
+        // DFT of the original audio
+        struct complex_val *dft_temp = DFT(temp, samples_per_frame, DFT_table);
 
+        //multipy with the matchFunction
+        struct complex_val *dft_new_temp = create_complex_1d_arr(samples_per_frame);
+        for(int j=0;j<samples_per_frame;j++){
+            dft_new_temp[j] = complex_multi(dft_temp[j], matchFunction[i][j]);
+        }
 
-}
+        //iDFT
+        struct complex_val *new_complextemp = iDFT(dft_new_temp, samples_per_frame, DFT_table); 
+        //magnitude of each element
+        short *new_temp = magnitude(new_complextemp, samples_per_frame);
 
-// new generated audio
-void new_observation_audio(){
+        for(int j=0;j<samples_per_frame;j++){
+            new_waveform[i][j] = new_temp[j];
+        }
 
+        free(temp);
+        free(dft_temp);
+        free(dft_new_temp);
+        free(new_temp);
+        printf(" Finish\n");
 
+    }
+    //return the 2D stacked data
+    return new_waveform;
 }
 
 
