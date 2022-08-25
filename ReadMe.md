@@ -191,7 +191,7 @@ If we listen to the audio file we generate, it is obvious that the echo was pref
 First we experimented this method in python(code above) to make sure that it could work. From the output of the echo processed audio, there is definitely some noise that is noticable which result in discarding the phase after processing. However, with a more linear or easy predictable noise, it works perfectly, which is the rain audio. We can perfectly cancel the noise and generate the observed audio by passing it through the match filter and the room filter. The observed audio sounds very clear, and does not contain any sound of the rain. This proves that this is a very powerful method for linear noise cancelation. 
 By coding this in C there are couple of techniques that we could do to speed up the processing time. By creating a DFT table could help up save a lot of time to calculte sine and cosine values in every frame iteration. However, there is still some method to speed up the processing time that could be another project in the future. 
 
-:::info
+::: info
 See ReadMe file in the C code folder to run the program
 :::
  
