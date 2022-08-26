@@ -1,4 +1,4 @@
-# Noise reduction with Match Filter
+# Noise Cancellation with Match Filter
 
 ## Introduction
 Noise cancelation headphones and speakers have been very popular throughout these years that had became a must for high quality products. There are various ways for noise cancelation and they are also suitable in different senarioes. When a device or speaker is placed in a position in the room, it is impossible to costimize every speaker for each types of rooms. Therefore, we have to find a solution that has noise cancelation function that fits for all typical scenarioes. In this project, we want to find the transfer function of the room and then apply the transfer function so that when people hear the audio, it is already noise canceled. This main project is coded in C.  
