@@ -1,4 +1,4 @@
-This project aims to find the transfer function of the room and for room cancelation.
+This project aims to find the transfer function of the room and for room cancellation.
 
 Intro:
 We demonstrate in the ReadMe.md file on how this project would theoratically work.
